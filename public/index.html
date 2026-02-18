@@ -43,6 +43,17 @@
 				overflow-x: hidden;
 			}
 
+			/* Force any iframe Scramjet injects to be fullscreen */
+			body > iframe {
+				position: fixed !important;
+				top: 0 !important;
+				left: 0 !important;
+				width: 100vw !important;
+				height: 100vh !important;
+				z-index: 9999 !important;
+				border: none !important;
+			}
+
 			/* Particle canvas */
 			#particles {
 				position: fixed;
@@ -91,7 +102,7 @@
 				50% { transform: translateY(-8px); }
 			}
 
-			/* Search form - keep original IDs, restyle everything */
+			/* Search form */
 			#sj-form {
 				display: flex;
 				gap: 10px;
@@ -202,6 +213,31 @@
 
 			#sj-error-code:not(:empty) { display: block; }
 
+			/* Back button overlay (shown when browsing) */
+			#proxy-back-btn {
+				display: none;
+				position: fixed;
+				top: 16px;
+				left: 16px;
+				z-index: 10000;
+				padding: 10px 18px;
+				background: rgba(0, 0, 0, 0.75);
+				border: 1.5px solid var(--primary);
+				border-radius: 10px;
+				color: white;
+				font-family: 'Inter', sans-serif;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				backdrop-filter: blur(8px);
+				transition: all 0.3s;
+			}
+
+			#proxy-back-btn:hover {
+				background: rgba(124, 77, 255, 0.3);
+				transform: translateY(-2px);
+			}
+
 			/* Footer */
 			footer {
 				font-size: 12px;
@@ -238,7 +274,7 @@
 			<button type="submit" class="go-btn">Go</button>
 		</form>
 
-		<!-- Quick launch links (use the sj-address + form submit trick) -->
+		<!-- Quick launch links -->
 		<div class="quick-links">
 			<a class="quick-link" onclick="goTo('https://google.com')">
 				<span class="icon">🔍</span><span class="label">Google</span>
@@ -270,11 +306,46 @@
 			<div>Powered by <a href="https://github.com/MercuryWorkshop/scramjet">Scramjet</a> &bull; <a href="credits.html">Credits</a></div>
 		</footer>
 
+		<!-- Back button shown when browsing -->
+		<button id="proxy-back-btn" onclick="closeProxy()">← Back</button>
+
 		<script>
-			// Quick link helper — fills the form and submits it so Scramjet handles routing
+			// Quick link helper
 			function goTo(url) {
 				document.getElementById('sj-address').value = url;
 				document.getElementById('sj-form').requestSubmit();
+			}
+
+			// Watch for Scramjet injecting its iframe and make it fullscreen
+			const observer = new MutationObserver((mutations) => {
+				for (const mutation of mutations) {
+					for (const node of mutation.addedNodes) {
+						if (node.tagName === 'IFRAME') {
+							// Force fullscreen
+							node.style.cssText = `
+								position: fixed !important;
+								top: 0 !important;
+								left: 0 !important;
+								width: 100vw !important;
+								height: 100vh !important;
+								z-index: 9999 !important;
+								border: none !important;
+							`;
+							// Show the back button
+							document.getElementById('proxy-back-btn').style.display = 'block';
+						}
+					}
+				}
+			});
+
+			observer.observe(document.body, { childList: true, subtree: true });
+
+			function closeProxy() {
+				// Remove any injected iframes
+				document.querySelectorAll('body > iframe').forEach(el => el.remove());
+				document.getElementById('proxy-back-btn').style.display = 'none';
+				// Clear the address bar
+				document.getElementById('sj-address').value = '';
 			}
 
 			// Particle background
