@@ -1,159 +1,405 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap");
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+		<title>Desritory Proxy</title>
+		<link rel="shortcut icon" content="favicon.webp" />
 
-body {
-	font-family: "Roboto", Arial, Helvetica, sans-serif;
-	margin: 0;
-	background: #111;
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
-}
+		<!-- Required Scramjet scripts - DO NOT REMOVE -->
+		<script src="/scram/scramjet.all.js"></script>
+		<script src="/baremux/index.js"></script>
+		<script src="register-sw.js" defer></script>
+		<script src="search.js" defer></script>
+		<script src="index.js" defer></script>
 
-.flex-center {
-	display: flex;
-	justify-content: center;
-}
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-.header-center {
-	align-items: center;
-	flex-direction: column;
-	margin-top: 10%;
-}
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
 
-.left-margin {
-	margin: 0px 16px;
-}
+			:root {
+				--primary: #7c4dff;
+				--accent: #a855f7;
+				--light: #c084fc;
+				--glow: rgba(124, 77, 255, 0.35);
+			}
 
-#sj-frame {
-	border: none;
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	background-color: #111;
-}
+			body {
+				font-family: 'Inter', sans-serif;
+				background: #1a2332;
+				color: white;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 32px;
+				padding: 40px 20px;
+				overflow-x: hidden;
+			}
 
-#sj-error {
-	color: #ff6666 !important;
-	white-space: pre-wrap;
-}
+			/* Force any iframe Scramjet injects to be fullscreen */
+			body > iframe {
+				position: fixed !important;
+				top: 0 !important;
+				left: 0 !important;
+				width: 100vw !important;
+				height: 100vh !important;
+				z-index: 9999 !important;
+				border: none !important;
+			}
 
-#sj-error-code {
-	font-size: 12px;
-	color: #fff;
-	font-family: "Courier New", Courier, monospace;
-}
+			/* Particle canvas */
+			#particles {
+				position: fixed;
+				top: 0; left: 0;
+				width: 100%; height: 100%;
+				pointer-events: none;
+				z-index: 0;
+				background: transparent;
+			}
 
-.logo {
-	height: 25vh;
-}
+			/* Everything above particles */
+			body > * { position: relative; z-index: 1; }
 
-.logo-wrapper .text {
-	font-size: 75px;
-	color: #fff;
-}
+			/* Title */
+			.title-block {
+				text-align: center;
+			}
 
-.logo-wrapper h1 {
-	color: white;
-}
+			.title-block h1 {
+				font-family: 'Poppins', sans-serif;
+				font-size: clamp(36px, 6vw, 64px);
+				font-weight: 900;
+				letter-spacing: 3px;
+				background: linear-gradient(135deg, var(--light) 0%, var(--primary) 40%, var(--accent) 100%);
+				background-size: 200% 200%;
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				animation: gradientShift 6s ease infinite, floatTitle 4s ease-in-out infinite;
+			}
 
-footer {
-	margin: 0 16px;
-	margin-top: auto;
-	display: flex;
-	flex-direction: column;
-	line-height: 30px;
-	margin-bottom: 20px;
-}
+			.title-block p {
+				margin-top: 10px;
+				font-size: 18px;
+				color: rgba(255, 255, 255, 0.5);
+				letter-spacing: 1px;
+			}
 
-footer > div {
-	display: flex;
-	justify-content: left;
-	align-items: center;
-	flex-wrap: wrap;
-	margin-bottom: 15px;
-}
+			@keyframes gradientShift {
+				0%, 100% { background-position: 0% 50%; }
+				50% { background-position: 100% 50%; }
+			}
 
-footer a,
-footer span {
-	margin: 0 15px;
-	text-decoration: none;
-	color: #fff;
-	font-size: 15px;
-}
+			@keyframes floatTitle {
+				0%, 100% { transform: translateY(0px); }
+				50% { transform: translateY(-8px); }
+			}
 
-footer a {
-	cursor: pointer;
-}
+			/* Search form */
+			#sj-form {
+				display: flex;
+				gap: 10px;
+				width: 100%;
+				max-width: 600px;
+			}
 
-footer a:hover {
-	text-decoration: underline;
-}
+			#sj-search-engine {
+				display: none;
+			}
 
-.desc p {
-	width: 560px;
-	color: rgba(253, 253, 253, 0.514);
-}
+			#sj-address {
+				flex: 1;
+				padding: 16px 22px;
+				background: rgba(255, 255, 255, 0.07);
+				border: 1px solid rgba(255, 255, 255, 0.18);
+				border-radius: 12px;
+				color: white;
+				font-size: 16px;
+				font-family: 'Inter', sans-serif;
+				outline: none;
+				transition: all 0.3s;
+			}
 
-#sj-address {
-	background: none;
-	font-family: inherit;
-	padding: 0px 17px;
-	height: 48px;
-	border: 1px solid rgb(255, 255, 255, 0.2);
-	color: var(--text-color);
-	border-radius: 3px;
-	outline: none;
-	width: 350px;
-	margin-top: 5px;
-	border-radius: 50px;
-	color: #fff;
-	transition: border-radius 0.1s;
-}
+			#sj-address::placeholder {
+				color: rgba(255, 255, 255, 0.35);
+			}
 
-#sj-address:focus {
-	border: 1px solid rgba(253, 253, 253, 0.514);
-	border-radius: 6px;
-}
+			#sj-address:focus {
+				border-color: var(--primary);
+				box-shadow: 0 0 0 3px var(--glow);
+				background: rgba(255, 255, 255, 0.1);
+			}
 
-.credit {
-	border-radius: 10px;
-	padding: 10px;
-	display: block;
-	border: #fff 1px solid;
-	color: #fff;
-	display: flex;
-	flex-wrap: wrap;
-	margin-bottom: 15px;
-}
+			.go-btn {
+				padding: 16px 30px;
+				background: var(--primary);
+				border: none;
+				border-radius: 12px;
+				color: white;
+				font-size: 16px;
+				font-weight: 600;
+				font-family: 'Inter', sans-serif;
+				cursor: pointer;
+				transition: all 0.3s;
+			}
 
-.credit label {
-	margin-left: auto;
-	margin-right: 15px;
-}
+			.go-btn:hover {
+				opacity: 0.85;
+				transform: translateY(-2px);
+			}
 
-.credit a,
-.credit label {
-	color: white;
-	text-decoration: underline;
-	text-align: right;
-}
+			/* Quick links */
+			.quick-links {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+				gap: 12px;
+				width: 100%;
+				max-width: 600px;
+			}
 
-.credit pre {
-	display: none;
-	width: 100%;
-}
+			.quick-link {
+				padding: 16px 12px;
+				background: rgba(255, 255, 255, 0.06);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 14px;
+				cursor: pointer;
+				transition: all 0.3s;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				text-decoration: none;
+			}
 
-.credit label::after {
-	content: "show license";
-	cursor: pointer;
-}
+			.quick-link:hover {
+				background: rgba(255, 255, 255, 0.11);
+				transform: translateY(-3px);
+				border-color: rgba(255, 255, 255, 0.2);
+				box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+			}
 
-.credit input:checked + label::after {
-	content: "hide license";
-}
+			.quick-link .icon { font-size: 24px; }
+			.quick-link img {
+				width: 32px;
+				height: 32px;
+				object-fit: contain;
+				border-radius: 6px;
+			}
+			.quick-link .label {
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.7);
+				font-weight: 500;
+			}
 
-.credit input:checked ~ pre {
-	display: block;
-}
+			/* Error display */
+			#sj-error {
+				color: #f87171;
+				font-size: 14px;
+				text-align: center;
+				min-height: 0;
+			}
+
+			#sj-error-code {
+				color: rgba(255, 255, 255, 0.5);
+				font-size: 12px;
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 8px;
+				padding: 10px;
+				max-width: 600px;
+				overflow-x: auto;
+				display: none;
+			}
+
+			#sj-error-code:not(:empty) { display: block; }
+
+			/* Back button overlay (shown when browsing) */
+			#proxy-back-btn {
+				display: none;
+				position: fixed;
+				top: 16px;
+				left: 16px;
+				z-index: 10000;
+				padding: 10px 18px;
+				background: rgba(0, 0, 0, 0.75);
+				border: 1.5px solid var(--primary);
+				border-radius: 10px;
+				color: white;
+				font-family: 'Inter', sans-serif;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				backdrop-filter: blur(8px);
+				transition: all 0.3s;
+			}
+
+			#proxy-back-btn:hover {
+				background: rgba(124, 77, 255, 0.3);
+				transform: translateY(-2px);
+			}
+
+			/* Footer */
+			footer {
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.25);
+				text-align: center;
+			}
+
+			footer a {
+				color: rgba(255, 255, 255, 0.35);
+				text-decoration: none;
+				margin: 0 8px;
+				transition: color 0.2s;
+			}
+
+			footer a:hover { color: rgba(255, 255, 255, 0.6); }
+
+			@media (max-width: 500px) {
+				.quick-links { grid-template-columns: repeat(3, 1fr); }
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="particles"></canvas>
+
+		<div class="title-block">
+			<h1>Desritory Proxy</h1>
+			<p>Welcome to Freedom.</p>
+		</div>
+
+		<!-- Scramjet form — IDs must stay exactly as-is -->
+		<form id="sj-form">
+			<input id="sj-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
+			<input id="sj-address" type="text" placeholder="Search or enter a URL..." />
+			<button type="submit" class="go-btn">Go</button>
+		</form>
+
+		<!-- Quick launch links -->
+		<div class="quick-links">
+			<a class="quick-link" onclick="goTo('https://google.com')">
+				<img src="https://i.imgur.com/dusJ6cV.png" alt="Google"><span class="label">Google</span>
+			</a>
+			<a class="quick-link" onclick="goTo('https://youtube.com')">
+				<img src="https://i.imgur.com/r7hLGk3.jpeg" alt="YouTube"><span class="label">YouTube</span>
+			</a>
+			<a class="quick-link" onclick="goTo('https://discord.com')">
+				<img src="https://i.imgur.com/5meTq6R.jpeg" alt="Discord"><span class="label">Discord</span>
+			</a>
+			<a class="quick-link" onclick="goTo('https://github.com')">
+				<img src="https://i.imgur.com/EJIgs0x.png" alt="GitHub"><span class="label">Github</span>
+			</a>
+			<a class="quick-link" onclick="goTo('https://spotify.com')">
+				<img src="https://i.imgur.com/w4UvPjl.png" alt="Spotify"><span class="label">Spotify</span>
+			</a>
+			<a class="quick-link" onclick="goTo('https://twitter.com')">
+				<img src="https://i.imgur.com/HBB0Xeg.png" alt="X"><span class="label">X</span>
+			</a>
+		</div>
+
+		<!-- Required error elements - keep IDs -->
+		<div>
+			<p id="sj-error"></p>
+			<pre id="sj-error-code"></pre>
+		</div>
+
+		<footer>
+			<div>Powered by <a href="https://github.com/MercuryWorkshop/scramjet">Scramjet</a> &bull; <a href="credits.html">Credits</a></div>
+		</footer>
+
+		<!-- Back button shown when browsing -->
+		<button id="proxy-back-btn" onclick="closeProxy()">← Back</button>
+
+		<script>
+			// Quick link helper
+			function goTo(url) {
+				document.getElementById('sj-address').value = url;
+				document.getElementById('sj-form').requestSubmit();
+			}
+
+			// Watch for Scramjet injecting its iframe and make it fullscreen
+			const observer = new MutationObserver((mutations) => {
+				for (const mutation of mutations) {
+					for (const node of mutation.addedNodes) {
+						if (node.tagName === 'IFRAME') {
+							node.style.cssText = `
+								position: fixed !important;
+								top: 0 !important;
+								left: 0 !important;
+								width: 100vw !important;
+								height: 100vh !important;
+								z-index: 9999 !important;
+								border: none !important;
+							`;
+							document.getElementById('proxy-back-btn').style.display = 'block';
+						}
+					}
+				}
+			});
+
+			observer.observe(document.body, { childList: true, subtree: true });
+
+			function closeProxy() {
+				document.querySelectorAll('body > iframe').forEach(el => el.remove());
+				document.getElementById('proxy-back-btn').style.display = 'none';
+				document.getElementById('sj-address').value = '';
+			}
+
+			// Particle background
+			(function() {
+				const canvas = document.getElementById('particles');
+				const ctx = canvas.getContext('2d');
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+				window.addEventListener('resize', () => {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+				});
+
+				const mouse = { x: null, y: null };
+				window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+
+				const particles = Array.from({ length: 70 }, () => ({
+					x: Math.random() * canvas.width,
+					y: Math.random() * canvas.height,
+					size: Math.random() * 1.5 + 0.5,
+					vx: (Math.random() - 0.5) * 0.5,
+					vy: (Math.random() - 0.5) * 0.5,
+				}));
+
+				function animate() {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					for (const p of particles) {
+						p.x += p.vx; p.y += p.vy;
+						if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+						if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+						ctx.beginPath();
+						ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(255,255,255,0.4)';
+						ctx.fill();
+
+						if (mouse.x) {
+							const dx = p.x - mouse.x, dy = p.y - mouse.y;
+							const dist = Math.sqrt(dx * dx + dy * dy);
+							if (dist < 150) {
+								ctx.beginPath();
+								ctx.moveTo(p.x, p.y);
+								ctx.lineTo(mouse.x, mouse.y);
+								ctx.strokeStyle = `rgba(168,85,247,${0.4 * (1 - dist / 150)})`;
+								ctx.lineWidth = 1;
+								ctx.stroke();
+							}
+						}
+					}
+					requestAnimationFrame(animate);
+				}
+				animate();
+			})();
+		</script>
+	</body>
+</html>
