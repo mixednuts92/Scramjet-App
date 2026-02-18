@@ -280,27 +280,6 @@
 			<button type="submit" class="go-btn">Go</button>
 		</form>
 
-		<!-- Quick launch links -->
-		<div class="quick-links">
-			<a class="quick-link" onclick="goTo('https://google.com')">
-				<img src="https://www.google.com/s2/favicons?domain=google.com&sz=32" alt="Google"><span class="label">Google</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://youtube.com')">
-				<img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt="YouTube"><span class="label">YouTube</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://discord.com')">
-				<img src="https://www.google.com/s2/favicons?domain=discord.com&sz=32" alt="Discord"><span class="label">Discord</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://github.com')">
-				<img src="https://www.google.com/s2/favicons?domain=github.com&sz=32" alt="GitHub"><span class="label">Github</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://spotify.com')">
-				<img src="https://www.google.com/s2/favicons?domain=spotify.com&sz=32" alt="Spotify"><span class="label">Spotify</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://twitter.com')">
-				<img src="https://www.google.com/s2/favicons?domain=twitter.com&sz=32" alt="X"><span class="label">X</span>
-			</a>
-		</div>
 
 		<!-- Required error elements - keep IDs -->
 		<div>
@@ -321,6 +300,100 @@
 				document.getElementById('sj-address').value = url;
 				document.getElementById('sj-form').requestSubmit();
 			}
+
+			// Typing placeholder animation
+			const placeholders = ['discord.com', 'youtube.com', 'github.com', 'spotify.com', 'google.com'];
+			const prefix = 'Try searching ';
+			let plIndex = 0;
+			let charIndex = 0;
+			let phase = 'typing'; // typing, staying, deleting, waiting
+			const input = document.getElementById('sj-address');
+
+			let animationActive = false;
+			let inactivityTimer = null;
+			let cursorVisible = true;
+			let animFrame = null;
+
+			function setPlaceholder(text, showCursor) {
+				input.placeholder = text + (showCursor ? (cursorVisible ? '|' : ' ') : '');
+			}
+
+			// Single cursor blink - only updates display, no logic
+			setInterval(() => {
+				cursorVisible = !cursorVisible;
+				if (animationActive) {
+					const current = placeholders[plIndex].substring(0, charIndex);
+					setPlaceholder(prefix + current, true);
+				}
+			}, 530);
+
+			function startAnimation() {
+				animationActive = true;
+				charIndex = 0;
+				phase = 'typing';
+				runAnimation();
+			}
+
+			function stopAnimation() {
+				animationActive = false;
+				clearTimeout(animFrame);
+				input.placeholder = 'Try searching';
+			}
+
+			function runAnimation() {
+				if (!animationActive) return;
+				const target = placeholders[plIndex];
+
+				if (phase === 'typing') {
+					charIndex++;
+					setPlaceholder(prefix + target.substring(0, charIndex), true);
+					if (charIndex >= target.length) {
+						phase = 'staying';
+						animFrame = setTimeout(runAnimation, 3000);
+					} else {
+						animFrame = setTimeout(runAnimation, 65);
+					}
+				} else if (phase === 'staying') {
+					phase = 'deleting';
+					animFrame = setTimeout(runAnimation, 50);
+				} else if (phase === 'deleting') {
+					charIndex--;
+					setPlaceholder(prefix + target.substring(0, charIndex), true);
+					if (charIndex <= 0) {
+						phase = 'waiting';
+						plIndex = (plIndex + 1) % placeholders.length;
+						animFrame = setTimeout(runAnimation, 2000);
+					} else {
+						animFrame = setTimeout(runAnimation, 35);
+					}
+				} else if (phase === 'waiting') {
+					phase = 'typing';
+					animFrame = setTimeout(runAnimation, 50);
+				}
+			}
+
+			input.addEventListener('focus', () => {
+				clearTimeout(inactivityTimer);
+				stopAnimation();
+			});
+
+			input.addEventListener('blur', () => {
+				if (!input.value.trim()) {
+					inactivityTimer = setTimeout(startAnimation, 5000);
+				}
+			});
+
+			input.addEventListener('input', () => {
+				clearTimeout(inactivityTimer);
+				if (!input.value.trim()) {
+					stopAnimation();
+					inactivityTimer = setTimeout(startAnimation, 5000);
+				}
+			});
+
+			// Start with Try searching, begin animation after 2s
+			input.placeholder = 'Try searching';
+			inactivityTimer = setTimeout(startAnimation, 2000);
 
 			// Watch for Scramjet injecting its iframe and make it fullscreen
 			const observer = new MutationObserver((mutations) => {
