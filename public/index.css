@@ -13,364 +13,726 @@
 		<script src="search.js" defer></script>
 		<script src="index.js" defer></script>
 
-		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 		<style>
-			* {
-				margin: 0;
-				padding: 0;
-				box-sizing: border-box;
-			}
+			* { margin: 0; padding: 0; box-sizing: border-box; }
 
 			:root {
+				--bg: #0e1117;
+				--surface: #161b27;
+				--surface2: #1e2535;
+				--border: rgba(255,255,255,0.08);
+				--border-hover: rgba(255,255,255,0.16);
 				--primary: #7c4dff;
-				--accent: #a855f7;
-				--light: #c084fc;
-				--glow: rgba(124, 77, 255, 0.35);
+				--primary-glow: rgba(124,77,255,0.25);
+				--text: #e8eaf0;
+				--text-muted: rgba(232,234,240,0.45);
+				--tab-active: #1e2535;
+				--chrome-h: 52px;
+				--tab-h: 38px;
 			}
 
-			body {
-				font-family: 'Inter', sans-serif;
-				background: #1a2332;
-				color: white;
-				min-height: 100vh;
+			html, body {
+				height: 100%;
+				font-family: 'DM Sans', sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				overflow: hidden;
+			}
+
+			/* ── BROWSER CHROME ── */
+			#browser-chrome {
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				gap: 32px;
-				padding: 40px 20px;
-				overflow-x: hidden;
+				height: 100vh;
+				width: 100vw;
 			}
 
-			/* Force any iframe Scramjet injects to be fullscreen */
-			body > iframe {
-				position: fixed !important;
-				top: 0 !important;
-				left: 0 !important;
-				width: 100vw !important;
-				height: 100vh !important;
-				z-index: 9999 !important;
-				border: none !important;
-			}
-
-			/* Particle canvas */
-			#particles {
-				position: fixed;
-				top: 0; left: 0;
-				width: 100%; height: 100%;
-				pointer-events: none;
-				z-index: 0;
-				background: transparent;
-			}
-
-			/* Everything above particles */
-			body > * { position: relative; z-index: 1; }
-
-			/* Title */
-			.title-block {
-				text-align: center;
-			}
-
-			.title-block h1 {
-				font-family: 'Poppins', sans-serif;
-				font-size: clamp(36px, 6vw, 64px);
-				font-weight: 900;
-				letter-spacing: 3px;
-				background: linear-gradient(135deg, var(--light) 0%, var(--primary) 40%, var(--accent) 100%);
-				background-size: 200% 200%;
-				-webkit-background-clip: text;
-				-webkit-text-fill-color: transparent;
-				background-clip: text;
-				animation: gradientShift 6s ease infinite, floatTitle 4s ease-in-out infinite;
-			}
-
-			.title-block p {
-				margin-top: 10px;
-				font-size: 18px;
-				color: rgba(255, 255, 255, 0.5);
-				letter-spacing: 1px;
-			}
-
-			@keyframes gradientShift {
-				0%, 100% { background-position: 0% 50%; }
-				50% { background-position: 100% 50%; }
-			}
-
-			@keyframes floatTitle {
-				0%, 100% { transform: translateY(0px); }
-				50% { transform: translateY(-8px); }
-			}
-
-			/* Search form */
-			#sj-form {
+			/* Tab bar */
+			#tab-bar {
 				display: flex;
-				gap: 10px;
-				width: 100%;
-				max-width: 600px;
+				align-items: flex-end;
+				gap: 2px;
+				padding: 8px 8px 0;
+				background: var(--bg);
+				height: calc(var(--tab-h) + 8px);
+				border-bottom: 1px solid var(--border);
+				user-select: none;
 			}
 
-			#sj-search-engine {
-				display: none;
+			.tab {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 0 14px;
+				height: var(--tab-h);
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-bottom: none;
+				border-radius: 8px 8px 0 0;
+				font-size: 12.5px;
+				font-weight: 500;
+				color: var(--text-muted);
+				cursor: pointer;
+				min-width: 120px;
+				max-width: 220px;
+				transition: background 0.15s, color 0.15s;
+				position: relative;
+				overflow: hidden;
+			}
+
+			.tab.active {
+				background: var(--surface2);
+				color: var(--text);
+				border-color: var(--border-hover);
+			}
+
+			.tab .tab-favicon {
+				width: 14px; height: 14px;
+				border-radius: 2px;
+				flex-shrink: 0;
+			}
+
+			.tab .tab-title {
+				flex: 1;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.tab .tab-close {
+				opacity: 0;
+				font-size: 14px;
+				line-height: 1;
+				color: var(--text-muted);
+				border-radius: 4px;
+				padding: 1px 3px;
+				flex-shrink: 0;
+				transition: opacity 0.15s, background 0.15s;
+			}
+
+			.tab:hover .tab-close { opacity: 1; }
+			.tab .tab-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+			#new-tab-btn {
+				width: 30px; height: var(--tab-h);
+				display: flex; align-items: center; justify-content: center;
+				background: transparent;
+				border: none;
+				border-radius: 6px;
+				color: var(--text-muted);
+				font-size: 18px;
+				cursor: pointer;
+				flex-shrink: 0;
+				transition: background 0.15s, color 0.15s;
+			}
+
+			#new-tab-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+			/* Toolbar */
+			#toolbar {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 8px 12px;
+				background: var(--surface2);
+				border-bottom: 1px solid var(--border);
+				height: var(--chrome-h);
+			}
+
+			.nav-btn {
+				width: 32px; height: 32px;
+				display: flex; align-items: center; justify-content: center;
+				background: transparent;
+				border: none;
+				border-radius: 8px;
+				color: var(--text-muted);
+				cursor: pointer;
+				transition: background 0.15s, color 0.15s;
+				flex-shrink: 0;
+			}
+
+			.nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.07); color: var(--text); }
+			.nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+			.nav-btn svg { width: 16px; height: 16px; }
+
+			/* Address bar */
+			#address-bar-wrap {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 0 12px;
+				gap: 8px;
+				height: 36px;
+				transition: border-color 0.2s, box-shadow 0.2s;
+			}
+
+			#address-bar-wrap:focus-within {
+				border-color: var(--primary);
+				box-shadow: 0 0 0 3px var(--primary-glow);
+			}
+
+			#lock-icon {
+				color: #4ade80;
+				font-size: 13px;
+				flex-shrink: 0;
 			}
 
 			#sj-address {
 				flex: 1;
-				padding: 16px 22px;
-				background: rgba(255, 255, 255, 0.07);
-				border: 1px solid rgba(255, 255, 255, 0.18);
-				border-radius: 12px;
-				color: white;
-				font-size: 16px;
-				font-family: 'Inter', sans-serif;
+				background: transparent;
+				border: none;
 				outline: none;
-				transition: all 0.3s;
+				color: var(--text);
+				font-family: 'DM Mono', monospace;
+				font-size: 13px;
 			}
 
-			#sj-address::placeholder {
-				color: rgba(255, 255, 255, 0.35);
+			#sj-address::placeholder { color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+
+			#sj-search-engine { display: none; }
+
+			#go-btn {
+				background: transparent;
+				border: none;
+				color: var(--text-muted);
+				cursor: pointer;
+				padding: 2px 4px;
+				border-radius: 4px;
+				font-size: 13px;
+				transition: color 0.15s;
+				flex-shrink: 0;
 			}
 
-			#sj-address:focus {
+			#go-btn:hover { color: var(--primary); }
+
+			/* Viewport */
+			#viewport {
+				flex: 1;
+				position: relative;
+				overflow: hidden;
+				background: var(--bg);
+			}
+
+			/* New tab page */
+			#new-tab-page {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 36px;
+				padding: 40px 20px;
+				overflow-y: auto;
+			}
+
+			#particles {
+				position: fixed;
+				inset: 0;
+				pointer-events: none;
+				z-index: 0;
+			}
+
+			#new-tab-page > * { position: relative; z-index: 1; }
+
+			.logo-mark {
+				text-align: center;
+			}
+
+			.logo-mark h1 {
+				font-family: 'DM Mono', monospace;
+				font-size: clamp(28px, 5vw, 52px);
+				font-weight: 500;
+				letter-spacing: -1px;
+				color: var(--text);
+				animation: fadeUp 0.6s ease both;
+			}
+
+			.logo-mark h1 span {
+				color: var(--primary);
+			}
+
+			.logo-mark p {
+				margin-top: 8px;
+				font-size: 14px;
+				color: var(--text-muted);
+				letter-spacing: 2px;
+				text-transform: uppercase;
+				animation: fadeUp 0.6s 0.1s ease both;
+			}
+
+			@keyframes fadeUp {
+				from { opacity: 0; transform: translateY(16px); }
+				to { opacity: 1; transform: translateY(0); }
+			}
+
+			/* Homepage search */
+			#home-search {
+				display: flex;
+				width: 100%;
+				max-width: 560px;
+				background: var(--surface2);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				overflow: hidden;
+				animation: fadeUp 0.6s 0.2s ease both;
+				transition: border-color 0.2s, box-shadow 0.2s;
+			}
+
+			#home-search:focus-within {
 				border-color: var(--primary);
-				box-shadow: 0 0 0 3px var(--glow);
-				background: rgba(255, 255, 255, 0.1);
+				box-shadow: 0 0 0 3px var(--primary-glow);
 			}
 
-			.go-btn {
-				padding: 16px 30px;
+			#home-search input {
+				flex: 1;
+				padding: 16px 20px;
+				background: transparent;
+				border: none;
+				outline: none;
+				color: var(--text);
+				font-family: 'DM Sans', sans-serif;
+				font-size: 15px;
+			}
+
+			#home-search input::placeholder { color: var(--text-muted); }
+
+			#home-search button {
+				padding: 0 22px;
 				background: var(--primary);
 				border: none;
-				border-radius: 12px;
 				color: white;
-				font-size: 16px;
+				font-family: 'DM Sans', sans-serif;
+				font-size: 14px;
 				font-weight: 600;
-				font-family: 'Inter', sans-serif;
 				cursor: pointer;
-				transition: all 0.3s;
+				transition: opacity 0.15s;
+				letter-spacing: 0.3px;
 			}
 
-			.go-btn:hover {
-				opacity: 0.85;
-				transform: translateY(-2px);
-			}
+			#home-search button:hover { opacity: 0.85; }
 
-			/* Quick links */
-			.quick-links {
+			/* Quick links grid */
+			.shortcuts {
 				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-				gap: 12px;
-				width: 100%;
-				max-width: 600px;
+				grid-template-columns: repeat(6, 80px);
+				gap: 14px;
+				animation: fadeUp 0.6s 0.3s ease both;
 			}
 
-			.quick-link {
-				padding: 16px 12px;
-				background: rgba(255, 255, 255, 0.06);
-				border: 1px solid rgba(255, 255, 255, 0.1);
-				border-radius: 14px;
-				cursor: pointer;
-				transition: all 0.3s;
+			@media (max-width: 600px) {
+				.shortcuts { grid-template-columns: repeat(3, 80px); }
+			}
+
+			.shortcut {
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				gap: 8px;
+				padding: 14px 8px;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				cursor: pointer;
 				text-decoration: none;
+				transition: background 0.2s, transform 0.2s, border-color 0.2s;
 			}
 
-			.quick-link:hover {
-				background: rgba(255, 255, 255, 0.11);
+			.shortcut:hover {
+				background: var(--surface2);
+				border-color: var(--border-hover);
 				transform: translateY(-3px);
-				border-color: rgba(255, 255, 255, 0.2);
-				box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 			}
 
-			.quick-link .icon { font-size: 24px; }
-			.quick-link img {
-				width: 32px;
-				height: 32px;
-				object-fit: contain;
+			.shortcut img {
+				width: 28px; height: 28px;
 				border-radius: 6px;
+				object-fit: contain;
 			}
-			.quick-link .label {
-				font-size: 12px;
-				color: rgba(255, 255, 255, 0.7);
+
+			.shortcut .sc-label {
+				font-size: 11px;
 				font-weight: 500;
+				color: var(--text-muted);
+				text-align: center;
 			}
+
+			/* Proxy iframe */
+			#proxy-frame {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				border: none;
+				display: none;
+			}
+
+			/* Status bar */
+			#status-bar {
+				height: 22px;
+				background: var(--surface);
+				border-top: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				padding: 0 12px;
+				gap: 12px;
+				font-size: 11px;
+				color: var(--text-muted);
+				font-family: 'DM Mono', monospace;
+			}
+
+			#status-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+			/* Loading bar */
+			#load-bar {
+				position: absolute;
+				top: 0; left: 0;
+				height: 2px;
+				width: 0%;
+				background: linear-gradient(90deg, var(--primary), #a855f7);
+				border-radius: 0 2px 2px 0;
+				transition: width 0.3s ease, opacity 0.3s;
+				opacity: 0;
+				z-index: 100;
+			}
+
+			#load-bar.loading { opacity: 1; }
 
 			/* Error display */
-			#sj-error {
-				color: #f87171;
-				font-size: 14px;
-				text-align: center;
-				min-height: 0;
-			}
+			#sj-error { display: none; }
+			#sj-error-code { display: none; }
 
-			#sj-error-code {
-				color: rgba(255, 255, 255, 0.5);
-				font-size: 12px;
-				background: rgba(255, 255, 255, 0.05);
-				border-radius: 8px;
-				padding: 10px;
-				max-width: 600px;
-				overflow-x: auto;
-				display: none;
-			}
-
-			#sj-error-code:not(:empty) { display: block; }
-
-			/* Back button overlay (shown when browsing) */
-			#proxy-back-btn {
-				display: none;
-				position: fixed;
-				top: 16px;
-				left: 16px;
-				z-index: 10000;
-				padding: 10px 18px;
-				background: rgba(0, 0, 0, 0.75);
-				border: 1.5px solid var(--primary);
-				border-radius: 10px;
-				color: white;
-				font-family: 'Inter', sans-serif;
-				font-size: 14px;
-				font-weight: 600;
-				cursor: pointer;
-				backdrop-filter: blur(8px);
-				transition: all 0.3s;
-			}
-
-			#proxy-back-btn:hover {
-				background: rgba(124, 77, 255, 0.3);
-				transform: translateY(-2px);
-			}
-
-			/* Footer */
-			footer {
-				font-size: 12px;
-				color: rgba(255, 255, 255, 0.25);
-				text-align: center;
-			}
-
-			footer a {
-				color: rgba(255, 255, 255, 0.35);
-				text-decoration: none;
-				margin: 0 8px;
-				transition: color 0.2s;
-			}
-
-			footer a:hover { color: rgba(255, 255, 255, 0.6); }
-
-			@media (max-width: 500px) {
-				.quick-links { grid-template-columns: repeat(3, 1fr); }
-			}
+			/* Scrollbar */
+			::-webkit-scrollbar { width: 6px; }
+			::-webkit-scrollbar-track { background: transparent; }
+			::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 		</style>
 	</head>
 	<body>
 		<canvas id="particles"></canvas>
 
-		<div class="title-block">
-			<h1>Desritory Proxy</h1>
-			<p>Welcome to Freedom.</p>
+		<div id="browser-chrome">
+
+			<!-- Tab bar -->
+			<div id="tab-bar">
+				<div class="tab active" id="main-tab">
+					<img class="tab-favicon" src="" id="tab-favicon" onerror="this.style.display='none'" style="display:none">
+					<span class="tab-title" id="tab-title">New Tab</span>
+					<span class="tab-close" onclick="event.stopPropagation()">✕</span>
+				</div>
+				<button id="new-tab-btn" title="New tab">+</button>
+			</div>
+
+			<!-- Toolbar -->
+			<div id="toolbar">
+				<button class="nav-btn" id="back-btn" title="Back" disabled>
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="10,3 5,8 10,13"/>
+					</svg>
+				</button>
+				<button class="nav-btn" id="fwd-btn" title="Forward" disabled>
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="6,3 11,8 6,13"/>
+					</svg>
+				</button>
+				<button class="nav-btn" id="reload-btn" title="Reload">
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M13.5 8A5.5 5.5 0 1 1 10 3.07"/>
+						<polyline points="10,1 10,4 13,4"/>
+					</svg>
+				</button>
+				<button class="nav-btn" id="home-btn" title="Home">
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M2 7L8 2l6 5"/>
+						<path d="M4 7v7h3v-4h2v4h3V7"/>
+					</svg>
+				</button>
+
+				<!-- Address bar (also doubles as sj-form) -->
+				<form id="sj-form" style="flex:1;display:flex;">
+					<input id="sj-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
+					<div id="address-bar-wrap">
+						<span id="lock-icon">🔒</span>
+						<input id="sj-address" type="text" placeholder="Search or enter a URL..." autocomplete="off" />
+						<button type="submit" id="go-btn">↵</button>
+					</div>
+				</form>
+
+				<button class="nav-btn" id="menu-btn" title="Menu">
+					<svg viewBox="0 0 16 16" fill="currentColor">
+						<circle cx="8" cy="3" r="1.2"/>
+						<circle cx="8" cy="8" r="1.2"/>
+						<circle cx="8" cy="13" r="1.2"/>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Main viewport -->
+			<div id="viewport">
+				<div id="load-bar"></div>
+
+				<!-- New tab page -->
+				<div id="new-tab-page">
+					<div class="logo-mark">
+						<h1>Desri<span>tory</span></h1>
+						<p>Welcome to freedom</p>
+					</div>
+
+					<div id="home-search">
+						<input type="text" id="home-input" placeholder="Search or enter a URL..." autocomplete="off" />
+						<button type="button" id="home-go">Go</button>
+					</div>
+
+					<div class="shortcuts">
+						<a class="shortcut" onclick="navigate('https://google.com')">
+							<img src="https://i.imgur.com/dusJ6cV.png" alt="Google">
+							<span class="sc-label">Google</span>
+						</a>
+						<a class="shortcut" onclick="navigate('https://youtube.com')">
+							<img src="https://i.imgur.com/r7hLGk3.jpeg" alt="YouTube">
+							<span class="sc-label">YouTube</span>
+						</a>
+						<a class="shortcut" onclick="navigate('https://discord.com')">
+							<img src="https://i.imgur.com/5meTq6R.jpeg" alt="Discord">
+							<span class="sc-label">Discord</span>
+						</a>
+						<a class="shortcut" onclick="navigate('https://github.com')">
+							<img src="https://i.imgur.com/EJIgs0x.png" alt="GitHub">
+							<span class="sc-label">GitHub</span>
+						</a>
+						<a class="shortcut" onclick="navigate('https://spotify.com')">
+							<img src="https://i.imgur.com/w4UvPjl.png" alt="Spotify">
+							<span class="sc-label">Spotify</span>
+						</a>
+						<a class="shortcut" onclick="navigate('https://x.com')">
+							<img src="https://i.imgur.com/HBB0Xeg.png" alt="X">
+							<span class="sc-label">X</span>
+						</a>
+					</div>
+				</div>
+
+				<!-- Proxy iframe container — Scramjet will inject here -->
+				<div id="frame-host" style="position:absolute;inset:0;display:none;"></div>
+			</div>
+
+			<!-- Status bar -->
+			<div id="status-bar">
+				<span id="status-text">Ready</span>
+				<span id="status-secure" style="color:#4ade80;">● Secure</span>
+			</div>
 		</div>
 
-		<!-- Scramjet form — IDs must stay exactly as-is -->
-		<form id="sj-form">
-			<input id="sj-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
-			<input id="sj-address" type="text" placeholder="Search or enter a URL..." />
-			<button type="submit" class="go-btn">Go</button>
-		</form>
-
-		<!-- Quick launch links -->
-		<div class="quick-links">
-			<a class="quick-link" onclick="goTo('https://google.com')">
-				<img src="https://i.imgur.com/dusJ6cV.png" alt="Google"><span class="label">Google</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://youtube.com')">
-				<img src="https://i.imgur.com/r7hLGk3.jpeg" alt="YouTube"><span class="label">YouTube</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://discord.com')">
-				<img src="https://i.imgur.com/5meTq6R.jpeg" alt="Discord"><span class="label">Discord</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://github.com')">
-				<img src="https://i.imgur.com/EJIgs0x.png" alt="GitHub"><span class="label">Github</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://spotify.com')">
-				<img src="https://i.imgur.com/w4UvPjl.png" alt="Spotify"><span class="label">Spotify</span>
-			</a>
-			<a class="quick-link" onclick="goTo('https://twitter.com')">
-				<img src="https://i.imgur.com/HBB0Xeg.png" alt="X"><span class="label">X</span>
-			</a>
-		</div>
-
-		<!-- Required error elements - keep IDs -->
-		<div>
+		<!-- Keep required error elements hidden -->
+		<div style="display:none">
 			<p id="sj-error"></p>
 			<pre id="sj-error-code"></pre>
 		</div>
 
-		<footer>
-			<div>Powered by <a href="https://github.com/MercuryWorkshop/scramjet">Scramjet</a> &bull; <a href="credits.html">Credits</a></div>
-		</footer>
-
-		<!-- Back button shown when browsing -->
-		<button id="proxy-back-btn" onclick="closeProxy()">← Back</button>
-
 		<script>
-			// Quick link helper
-			function goTo(url) {
+			/* ─── State ─── */
+			let browsing = false;
+			let currentUrl = '';
+			const history = [];
+			let historyIndex = -1;
+
+			/* ─── DOM refs ─── */
+			const newTabPage  = document.getElementById('new-tab-page');
+			const frameHost   = document.getElementById('frame-host');
+			const loadBar     = document.getElementById('load-bar');
+			const addrInput   = document.getElementById('sj-address');
+			const homeInput   = document.getElementById('home-input');
+			const tabTitle    = document.getElementById('tab-title');
+			const tabFavicon  = document.getElementById('tab-favicon');
+			const statusText  = document.getElementById('status-text');
+			const backBtn     = document.getElementById('back-btn');
+			const fwdBtn      = document.getElementById('fwd-btn');
+			const lockIcon    = document.getElementById('lock-icon');
+			const statusSecure= document.getElementById('status-secure');
+
+			/* ─── Navigate ─── */
+			function navigate(url) {
+				if (!url) return;
+				// Fill address bar
+				addrInput.value = url;
 				document.getElementById('sj-address').value = url;
+				// Submit Scramjet form
 				document.getElementById('sj-form').requestSubmit();
 			}
 
-			// Watch for Scramjet injecting its iframe and make it fullscreen
-			const observer = new MutationObserver((mutations) => {
-				for (const mutation of mutations) {
-					for (const node of mutation.addedNodes) {
-						if (node.tagName === 'IFRAME') {
-							node.style.cssText = `
-								position: fixed !important;
-								top: 0 !important;
-								left: 0 !important;
-								width: 100vw !important;
-								height: 100vh !important;
-								z-index: 9999 !important;
-								border: none !important;
-							`;
-							document.getElementById('proxy-back-btn').style.display = 'block';
+			document.getElementById('home-go').addEventListener('click', () => {
+				const v = homeInput.value.trim();
+				if (v) navigate(v);
+			});
+
+			homeInput.addEventListener('keydown', e => {
+				if (e.key === 'Enter') { e.preventDefault(); navigate(homeInput.value.trim()); }
+			});
+
+			/* ─── Scramjet form submit → show browser frame ─── */
+			document.getElementById('sj-form').addEventListener('submit', () => {
+				const url = addrInput.value.trim();
+				if (!url) return;
+
+				// Switch to frame view
+				showBrowsing(url);
+			});
+
+			function showBrowsing(url) {
+				browsing = true;
+				currentUrl = url;
+				newTabPage.style.display = 'none';
+				frameHost.style.display = 'block';
+				addrInput.value = url;
+				tabTitle.textContent = getDomain(url);
+				updateSecure(url);
+				startLoadBar();
+				updateNav();
+
+				// Push history
+				if (historyIndex < history.length - 1) history.splice(historyIndex + 1);
+				history.push(url);
+				historyIndex = history.length - 1;
+				updateNav();
+
+				// Status
+				statusText.textContent = 'Loading ' + url;
+
+				// Scramjet injects an iframe into body — move it into frameHost
+				waitForFrame();
+			}
+
+			function waitForFrame() {
+				const observer = new MutationObserver((mutations) => {
+					for (const m of mutations) {
+						for (const node of m.addedNodes) {
+							if (node.tagName === 'IFRAME') {
+								frameHost.appendChild(node);
+								Object.assign(node.style, {
+									position: 'absolute',
+									inset: '0',
+									width: '100%',
+									height: '100%',
+									border: 'none',
+								});
+								stopLoadBar();
+								statusText.textContent = currentUrl;
+								observer.disconnect();
+
+								node.addEventListener('load', () => {
+									stopLoadBar();
+									try {
+										const title = node.contentDocument?.title;
+										if (title) tabTitle.textContent = title;
+									} catch(e) {}
+								});
+							}
 						}
 					}
+				});
+				observer.observe(document.body, { childList: true, subtree: false });
+			}
+
+			function showNewTab() {
+				browsing = false;
+				newTabPage.style.display = 'flex';
+				frameHost.style.display = 'none';
+				frameHost.innerHTML = '';
+				addrInput.value = '';
+				tabTitle.textContent = 'New Tab';
+				statusText.textContent = 'Ready';
+				stopLoadBar();
+			}
+
+			/* ─── Nav buttons ─── */
+			document.getElementById('back-btn').addEventListener('click', () => {
+				if (historyIndex > 0) {
+					historyIndex--;
+					navigate(history[historyIndex]);
 				}
 			});
 
-			observer.observe(document.body, { childList: true, subtree: true });
+			document.getElementById('fwd-btn').addEventListener('click', () => {
+				if (historyIndex < history.length - 1) {
+					historyIndex++;
+					navigate(history[historyIndex]);
+				}
+			});
 
-			function closeProxy() {
-				document.querySelectorAll('body > iframe').forEach(el => el.remove());
-				document.getElementById('proxy-back-btn').style.display = 'none';
-				document.getElementById('sj-address').value = '';
+			document.getElementById('reload-btn').addEventListener('click', () => {
+				if (browsing) navigate(currentUrl);
+			});
+
+			document.getElementById('home-btn').addEventListener('click', showNewTab);
+			document.getElementById('new-tab-btn').addEventListener('click', showNewTab);
+
+			function updateNav() {
+				backBtn.disabled = historyIndex <= 0;
+				fwdBtn.disabled = historyIndex >= history.length - 1;
 			}
 
-			// Particle background
+			/* ─── Load bar ─── */
+			let loadTimer;
+			function startLoadBar() {
+				loadBar.style.width = '0%';
+				loadBar.classList.add('loading');
+				let w = 0;
+				clearInterval(loadTimer);
+				loadTimer = setInterval(() => {
+					w += Math.random() * 12;
+					if (w > 88) w = 88;
+					loadBar.style.width = w + '%';
+				}, 200);
+			}
+
+			function stopLoadBar() {
+				clearInterval(loadTimer);
+				loadBar.style.width = '100%';
+				setTimeout(() => {
+					loadBar.classList.remove('loading');
+					loadBar.style.width = '0%';
+				}, 400);
+			}
+
+			/* ─── Address bar helpers ─── */
+			addrInput.addEventListener('focus', () => addrInput.select());
+
+			function getDomain(url) {
+				try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
+				catch { return url.slice(0, 32); }
+			}
+
+			function updateSecure(url) {
+				const isHttps = url.startsWith('https://') || !url.startsWith('http://');
+				lockIcon.textContent = isHttps ? '🔒' : '⚠️';
+				lockIcon.style.color = isHttps ? '' : '#f59e0b';
+				statusSecure.textContent = isHttps ? '● Secure' : '● Not Secure';
+				statusSecure.style.color = isHttps ? '#4ade80' : '#f59e0b';
+			}
+
+			/* ─── Particles ─── */
 			(function() {
 				const canvas = document.getElementById('particles');
 				const ctx = canvas.getContext('2d');
-				canvas.width = window.innerWidth;
-				canvas.height = window.innerHeight;
-				window.addEventListener('resize', () => {
-					canvas.width = window.innerWidth;
-					canvas.height = window.innerHeight;
-				});
+				function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+				resize();
+				window.addEventListener('resize', resize);
+
+				const particles = Array.from({ length: 55 }, () => ({
+					x: Math.random() * canvas.width,
+					y: Math.random() * canvas.height,
+					size: Math.random() * 1.2 + 0.3,
+					vx: (Math.random() - 0.5) * 0.4,
+					vy: (Math.random() - 0.5) * 0.4,
+				}));
 
 				const mouse = { x: null, y: null };
 				window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-
-				const particles = Array.from({ length: 70 }, () => ({
-					x: Math.random() * canvas.width,
-					y: Math.random() * canvas.height,
-					size: Math.random() * 1.5 + 0.5,
-					vx: (Math.random() - 0.5) * 0.5,
-					vy: (Math.random() - 0.5) * 0.5,
-				}));
 
 				function animate() {
 					ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -380,17 +742,16 @@
 						if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
 						ctx.beginPath();
 						ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(255,255,255,0.4)';
+						ctx.fillStyle = 'rgba(255,255,255,0.3)';
 						ctx.fill();
-
 						if (mouse.x) {
 							const dx = p.x - mouse.x, dy = p.y - mouse.y;
 							const dist = Math.sqrt(dx * dx + dy * dy);
-							if (dist < 150) {
+							if (dist < 120) {
 								ctx.beginPath();
 								ctx.moveTo(p.x, p.y);
 								ctx.lineTo(mouse.x, mouse.y);
-								ctx.strokeStyle = `rgba(168,85,247,${0.4 * (1 - dist / 150)})`;
+								ctx.strokeStyle = `rgba(124,77,255,${0.35 * (1 - dist / 120)})`;
 								ctx.lineWidth = 1;
 								ctx.stroke();
 							}
