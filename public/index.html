@@ -535,232 +535,278 @@
 		</div>
 
 		<script>
-			/* ─── State ─── */
-			let browsing = false;
-			let currentUrl = '';
-			const history = [];
-			let historyIndex = -1;
+			/* ─── Tab State ─── */
+let tabs = [];
+let activeTabId = null;
+let tabCounter = 0;
 
-			/* ─── DOM refs ─── */
-			const newTabPage  = document.getElementById('new-tab-page');
-			const frameHost   = document.getElementById('frame-host');
-			const loadBar     = document.getElementById('load-bar');
-			const addrInput   = document.getElementById('sj-address');
-			const homeInput   = document.getElementById('home-input');
-			const tabTitle    = document.getElementById('tab-title');
-			const tabFavicon  = document.getElementById('tab-favicon');
-			const statusText  = document.getElementById('status-text');
-			const backBtn     = document.getElementById('back-btn');
-			const fwdBtn      = document.getElementById('fwd-btn');
-			const lockIcon    = document.getElementById('lock-icon');
-			const statusSecure= document.getElementById('status-secure');
+function createTab(url = null) {
+    const id = ++tabCounter;
+    const tab = {
+        id,
+        url: url || '',
+        title: 'New Tab',
+        favicon: '',
+        history: [],
+        historyIndex: -1,
+        frameEl: null,
+    };
+    tabs.push(tab);
+    renderTabBar();
+    switchTab(id);
+    if (url) navigateTab(id, url);
+    return id;
+}
 
-			/* ─── Navigate ─── */
-			function navigate(url) {
-				if (!url) return;
-				// Fill address bar
-				addrInput.value = url;
-				document.getElementById('sj-address').value = url;
-				// Submit Scramjet form
-				document.getElementById('sj-form').requestSubmit();
-			}
+function closeTab(id) {
+    if (tabs.length === 1) { showNewTabPage(); return; }
+    const idx = tabs.findIndex(t => t.id === id);
+    tabs = tabs.filter(t => t.id !== id);
+    // remove frame if exists
+    const frame = document.querySelector(`[data-tab-frame="${id}"]`);
+    if (frame) frame.remove();
+    // switch to nearest tab
+    const newIdx = Math.min(idx, tabs.length - 1);
+    renderTabBar();
+    switchTab(tabs[newIdx].id);
+}
 
-			document.getElementById('home-go').addEventListener('click', () => {
-				const v = homeInput.value.trim();
-				if (v) navigate(v);
-			});
+function switchTab(id) {
+    activeTabId = id;
+    // hide all frames
+    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
+    const tab = tabs.find(t => t.id === id);
+    if (!tab) return;
 
-			homeInput.addEventListener('keydown', e => {
-				if (e.key === 'Enter') { e.preventDefault(); navigate(homeInput.value.trim()); }
-			});
+    if (tab.url && tab.frameEl) {
+        newTabPage.style.display = 'none';
+        frameHost.style.display = 'block';
+        tab.frameEl.style.display = 'block';
+        addrInput.value = tab.url;
+    } else {
+        showNewTabPage();
+    }
 
-			/* ─── Scramjet form submit → show browser frame ─── */
-			document.getElementById('sj-form').addEventListener('submit', () => {
-				const url = addrInput.value.trim();
-				if (!url) return;
+    tabTitle.textContent = tab.title;
+    addrInput.value = tab.url || '';
+    updateNav();
+    renderTabBar();
+}
 
-				// Switch to frame view
-				showBrowsing(url);
-			});
+function renderTabBar() {
+    const bar = document.getElementById('tab-bar');
+    // remove old tabs (keep new-tab-btn)
+    bar.querySelectorAll('.tab').forEach(el => el.remove());
+    const newTabBtn = document.getElementById('new-tab-btn');
 
-			function showBrowsing(url) {
-				browsing = true;
-				currentUrl = url;
-				newTabPage.style.display = 'none';
-				frameHost.style.display = 'block';
-				addrInput.value = url;
-				tabTitle.textContent = getDomain(url);
-				updateSecure(url);
-				startLoadBar();
-				updateNav();
+    tabs.forEach(tab => {
+        const el = document.createElement('div');
+        el.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+        el.dataset.tabId = tab.id;
+        el.innerHTML = `
+            <img class="tab-favicon" src="${tab.favicon}" onerror="this.style.display='none'" style="${tab.favicon ? '' : 'display:none'}">
+            <span class="tab-title">${tab.title}</span>
+            <span class="tab-close">✕</span>
+        `;
+        el.addEventListener('click', () => switchTab(tab.id));
+        el.querySelector('.tab-close').addEventListener('click', e => {
+            e.stopPropagation();
+            closeTab(tab.id);
+        });
+        bar.insertBefore(el, newTabBtn);
+    });
+}
 
-				// Push history
-				if (historyIndex < history.length - 1) history.splice(historyIndex + 1);
-				history.push(url);
-				historyIndex = history.length - 1;
-				updateNav();
+function navigateTab(id, url) {
+    const tab = tabs.find(t => t.id === id);
+    if (!tab) return;
 
-				// Status
-				statusText.textContent = 'Loading ' + url;
+    tab.url = url;
+    tab.title = getDomain(url);
+    addrInput.value = url;
 
-				// Scramjet injects an iframe into body — move it into frameHost
-				waitForFrame();
-			}
+    newTabPage.style.display = 'none';
+    frameHost.style.display = 'block';
 
-			function waitForFrame() {
-				const observer = new MutationObserver((mutations) => {
-					for (const m of mutations) {
-						for (const node of m.addedNodes) {
-							if (node.tagName === 'IFRAME') {
-								frameHost.appendChild(node);
-								Object.assign(node.style, {
-									position: 'absolute',
-									inset: '0',
-									width: '100%',
-									height: '100%',
-									border: 'none',
-								});
-								stopLoadBar();
-								statusText.textContent = currentUrl;
-								observer.disconnect();
+    // remove old frame for this tab
+    const old = document.querySelector(`[data-tab-frame="${id}"]`);
+    if (old) old.remove();
 
-								node.addEventListener('load', () => {
-									stopLoadBar();
-									try {
-										const title = node.contentDocument?.title;
-										if (title) tabTitle.textContent = title;
-									} catch(e) {}
-								});
-							}
-						}
-					}
-				});
-				observer.observe(document.body, { childList: true, subtree: false });
-			}
+    // hide all other frames
+    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
 
-			function showNewTab() {
-				browsing = false;
-				newTabPage.style.display = 'flex';
-				frameHost.style.display = 'none';
-				frameHost.innerHTML = '';
-				addrInput.value = '';
-				tabTitle.textContent = 'New Tab';
-				statusText.textContent = 'Ready';
-				stopLoadBar();
-			}
+    updateSecure(url);
+    startLoadBar();
+    statusText.textContent = 'Loading ' + url;
 
-			/* ─── Nav buttons ─── */
-			document.getElementById('back-btn').addEventListener('click', () => {
-				if (historyIndex > 0) {
-					historyIndex--;
-					navigate(history[historyIndex]);
-				}
-			});
+    // push history
+    if (tab.historyIndex < tab.history.length - 1) tab.history.splice(tab.historyIndex + 1);
+    tab.history.push(url);
+    tab.historyIndex = tab.history.length - 1;
+    updateNav();
+    renderTabBar();
 
-			document.getElementById('fwd-btn').addEventListener('click', () => {
-				if (historyIndex < history.length - 1) {
-					historyIndex++;
-					navigate(history[historyIndex]);
-				}
-			});
+    // set address bar so scramjet picks it up
+    addrInput.value = url;
+    document.getElementById('sj-form').requestSubmit();
 
-			document.getElementById('reload-btn').addEventListener('click', () => {
-				if (browsing) navigate(currentUrl);
-			});
+    // watch for the iframe scramjet creates and adopt it
+    const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            for (const node of m.addedNodes) {
+                if (node.tagName === 'IFRAME') {
+                    node.dataset.tabFrame = id;
+                    tab.frameEl = node;
+                    frameHost.appendChild(node);
+                    Object.assign(node.style, {
+                        position: 'absolute', inset: '0',
+                        width: '100%', height: '100%', border: 'none',
+                    });
+                    stopLoadBar();
+                    statusText.textContent = url;
+                    observer.disconnect();
+                    node.addEventListener('load', () => {
+                        stopLoadBar();
+                        try {
+                            const title = node.contentDocument?.title;
+                            if (title) { tab.title = title; renderTabBar(); tabTitle.textContent = title; }
+                        } catch(e) {}
+                    });
+                }
+            }
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: false });
+}
 
-			document.getElementById('home-btn').addEventListener('click', showNewTab);
-			document.getElementById('new-tab-btn').addEventListener('click', showNewTab);
+/* ─── Navigate (public) ─── */
+function navigate(url) {
+    if (!url) return;
+    addrInput.value = url;
+    navigateTab(activeTabId, url);
+}
 
-			function updateNav() {
-				backBtn.disabled = historyIndex <= 0;
-				fwdBtn.disabled = historyIndex >= history.length - 1;
-			}
+/* ─── DOM refs ─── */
+const newTabPage  = document.getElementById('new-tab-page');
+const frameHost   = document.getElementById('frame-host');
+const loadBar     = document.getElementById('load-bar');
+const addrInput   = document.getElementById('sj-address');
+const homeInput   = document.getElementById('home-input');
+const tabTitle    = document.getElementById('tab-title');
+const tabFavicon  = document.getElementById('tab-favicon');
+const statusText  = document.getElementById('status-text');
+const backBtn     = document.getElementById('back-btn');
+const fwdBtn      = document.getElementById('fwd-btn');
+const lockIcon    = document.getElementById('lock-icon');
+const statusSecure= document.getElementById('status-secure');
 
-			/* ─── Load bar ─── */
-			let loadTimer;
-			function startLoadBar() {
-				loadBar.style.width = '0%';
-				loadBar.classList.add('loading');
-				let w = 0;
-				clearInterval(loadTimer);
-				loadTimer = setInterval(() => {
-					w += Math.random() * 12;
-					if (w > 88) w = 88;
-					loadBar.style.width = w + '%';
-				}, 200);
-			}
+function showNewTabPage() {
+    newTabPage.style.display = 'flex';
+    frameHost.style.display = 'none';
+    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
+    addrInput.value = '';
+    tabTitle.textContent = 'New Tab';
+    statusText.textContent = 'Ready';
+    stopLoadBar();
+}
 
-			function stopLoadBar() {
-				clearInterval(loadTimer);
-				loadBar.style.width = '100%';
-				setTimeout(() => {
-					loadBar.classList.remove('loading');
-					loadBar.style.width = '0%';
-				}, 400);
-			}
+/* ─── Event listeners ─── */
+document.getElementById('home-go').addEventListener('click', () => {
+    const v = homeInput.value.trim(); if (v) navigate(v);
+});
+homeInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); navigate(homeInput.value.trim()); }
+});
+document.getElementById('sj-form').addEventListener('submit', e => {
+    const url = addrInput.value.trim(); if (url) navigateTab(activeTabId, url);
+});
+document.getElementById('back-btn').addEventListener('click', () => {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex > 0) { tab.historyIndex--; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
+});
+document.getElementById('fwd-btn').addEventListener('click', () => {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.historyIndex < tab.history.length - 1) { tab.historyIndex++; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
+});
+document.getElementById('reload-btn').addEventListener('click', () => {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab && tab.url) navigateTab(activeTabId, tab.url);
+});
+document.getElementById('home-btn').addEventListener('click', () => {
+    const tab = tabs.find(t => t.id === activeTabId);
+    if (tab) { tab.url = ''; tab.frameEl = null; }
+    showNewTabPage(); renderTabBar();
+});
+document.getElementById('new-tab-btn').addEventListener('click', () => createTab());
 
-			/* ─── Address bar helpers ─── */
-			addrInput.addEventListener('focus', () => addrInput.select());
+function updateNav() {
+    const tab = tabs.find(t => t.id === activeTabId);
+    backBtn.disabled = !tab || tab.historyIndex <= 0;
+    fwdBtn.disabled = !tab || tab.historyIndex >= tab.history.length - 1;
+}
 
-			function getDomain(url) {
-				try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
-				catch { return url.slice(0, 32); }
-			}
+/* ─── Load bar ─── */
+let loadTimer;
+function startLoadBar() {
+    loadBar.style.width = '0%'; loadBar.classList.add('loading');
+    let w = 0; clearInterval(loadTimer);
+    loadTimer = setInterval(() => { w += Math.random() * 12; if (w > 88) w = 88; loadBar.style.width = w + '%'; }, 200);
+}
+function stopLoadBar() {
+    clearInterval(loadTimer); loadBar.style.width = '100%';
+    setTimeout(() => { loadBar.classList.remove('loading'); loadBar.style.width = '0%'; }, 400);
+}
 
-			function updateSecure(url) {
-				const isHttps = url.startsWith('https://') || !url.startsWith('http://');
-				lockIcon.textContent = isHttps ? '🔒' : '⚠️';
-				lockIcon.style.color = isHttps ? '' : '#f59e0b';
-				statusSecure.textContent = isHttps ? '● Secure' : '● Not Secure';
-				statusSecure.style.color = isHttps ? '#4ade80' : '#f59e0b';
-			}
+addrInput.addEventListener('focus', () => addrInput.select());
 
-			/* ─── Particles ─── */
-			(function() {
-				const canvas = document.getElementById('particles');
-				const ctx = canvas.getContext('2d');
-				function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-				resize();
-				window.addEventListener('resize', resize);
+function getDomain(url) {
+    try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
+    catch { return url.slice(0, 32); }
+}
+function updateSecure(url) {
+    const isHttps = url.startsWith('https://') || !url.startsWith('http://');
+    lockIcon.textContent = isHttps ? '🔒' : '⚠️';
+    lockIcon.style.color = isHttps ? '' : '#f59e0b';
+    statusSecure.textContent = isHttps ? '● Secure' : '● Not Secure';
+    statusSecure.style.color = isHttps ? '#4ade80' : '#f59e0b';
+}
 
-				const particles = Array.from({ length: 55 }, () => ({
-					x: Math.random() * canvas.width,
-					y: Math.random() * canvas.height,
-					size: Math.random() * 1.2 + 0.3,
-					vx: (Math.random() - 0.5) * 0.4,
-					vy: (Math.random() - 0.5) * 0.4,
-				}));
+/* ─── Particles (unchanged) ─── */
+(function() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    const particles = Array.from({ length: 55 }, () => ({
+        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+        size: Math.random() * 1.2 + 0.3, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+    }));
+    const mouse = { x: null, y: null };
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of particles) {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+            if (mouse.x) {
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 120) {
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
+                    ctx.strokeStyle = `rgba(124,77,255,${0.35*(1-dist/120)})`; ctx.lineWidth = 1; ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
 
-				const mouse = { x: null, y: null };
-				window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-
-				function animate() {
-					ctx.clearRect(0, 0, canvas.width, canvas.height);
-					for (const p of particles) {
-						p.x += p.vx; p.y += p.vy;
-						if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-						if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-						ctx.beginPath();
-						ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(255,255,255,0.3)';
-						ctx.fill();
-						if (mouse.x) {
-							const dx = p.x - mouse.x, dy = p.y - mouse.y;
-							const dist = Math.sqrt(dx * dx + dy * dy);
-							if (dist < 120) {
-								ctx.beginPath();
-								ctx.moveTo(p.x, p.y);
-								ctx.lineTo(mouse.x, mouse.y);
-								ctx.strokeStyle = `rgba(124,77,255,${0.35 * (1 - dist / 120)})`;
-								ctx.lineWidth = 1;
-								ctx.stroke();
-							}
-						}
-					}
-					requestAnimationFrame(animate);
-				}
-				animate();
-			})();
+/* ─── Init ─── */
+createTab();
 		</script>
 	</body>
 </html>
