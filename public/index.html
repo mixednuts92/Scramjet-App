@@ -41,7 +41,6 @@
 				overflow: hidden;
 			}
 
-			/* ── BROWSER CHROME ── */
 			#browser-chrome {
 				display: flex;
 				flex-direction: column;
@@ -49,7 +48,6 @@
 				width: 100vw;
 			}
 
-			/* Tab bar */
 			#tab-bar {
 				display: flex;
 				align-items: flex-end;
@@ -130,7 +128,6 @@
 
 			#new-tab-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
 
-			/* Toolbar */
 			#toolbar {
 				display: flex;
 				align-items: center;
@@ -155,10 +152,8 @@
 
 			.nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.07); color: var(--text); }
 			.nav-btn:disabled { opacity: 0.3; cursor: default; }
-
 			.nav-btn svg { width: 16px; height: 16px; }
 
-			/* Address bar */
 			#address-bar-wrap {
 				flex: 1;
 				display: flex;
@@ -194,7 +189,6 @@
 			}
 
 			#sj-address::placeholder { color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
-
 			#sj-search-engine { display: none; }
 
 			#go-btn {
@@ -211,7 +205,6 @@
 
 			#go-btn:hover { color: var(--primary); }
 
-			/* Viewport */
 			#viewport {
 				flex: 1;
 				position: relative;
@@ -219,7 +212,6 @@
 				background: var(--bg);
 			}
 
-			/* New tab page */
 			#new-tab-page {
 				position: absolute;
 				inset: 0;
@@ -241,9 +233,7 @@
 
 			#new-tab-page > * { position: relative; z-index: 1; }
 
-			.logo-mark {
-				text-align: center;
-			}
+			.logo-mark { text-align: center; }
 
 			.logo-mark h1 {
 				font-family: 'DM Mono', monospace;
@@ -254,9 +244,7 @@
 				animation: fadeUp 0.6s ease both;
 			}
 
-			.logo-mark h1 span {
-				color: var(--primary);
-			}
+			.logo-mark h1 span { color: var(--primary); }
 
 			.logo-mark p {
 				margin-top: 8px;
@@ -272,7 +260,6 @@
 				to { opacity: 1; transform: translateY(0); }
 			}
 
-			/* Homepage search */
 			#home-search {
 				display: flex;
 				width: 100%;
@@ -318,7 +305,6 @@
 
 			#home-search button:hover { opacity: 0.85; }
 
-			/* Quick links grid */
 			.shortcuts {
 				display: grid;
 				grid-template-columns: repeat(6, 80px);
@@ -363,17 +349,6 @@
 				text-align: center;
 			}
 
-			/* Proxy iframe */
-			#proxy-frame {
-				position: absolute;
-				inset: 0;
-				width: 100%;
-				height: 100%;
-				border: none;
-				display: none;
-			}
-
-			/* Status bar */
 			#status-bar {
 				height: 22px;
 				background: var(--surface);
@@ -389,7 +364,6 @@
 
 			#status-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-			/* Loading bar */
 			#load-bar {
 				position: absolute;
 				top: 0; left: 0;
@@ -403,12 +377,9 @@
 			}
 
 			#load-bar.loading { opacity: 1; }
-
-			/* Error display */
 			#sj-error { display: none; }
 			#sj-error-code { display: none; }
 
-			/* Scrollbar */
 			::-webkit-scrollbar { width: 6px; }
 			::-webkit-scrollbar-track { background: transparent; }
 			::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
@@ -419,17 +390,10 @@
 
 		<div id="browser-chrome">
 
-			<!-- Tab bar -->
 			<div id="tab-bar">
-				<div class="tab active" id="main-tab">
-					<img class="tab-favicon" src="" id="tab-favicon" onerror="this.style.display='none'" style="display:none">
-					<span class="tab-title" id="tab-title">New Tab</span>
-					<span class="tab-close" onclick="event.stopPropagation()">✕</span>
-				</div>
 				<button id="new-tab-btn" title="New tab">+</button>
 			</div>
 
-			<!-- Toolbar -->
 			<div id="toolbar">
 				<button class="nav-btn" id="back-btn" title="Back" disabled>
 					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -454,7 +418,6 @@
 					</svg>
 				</button>
 
-				<!-- Address bar (also doubles as sj-form) -->
 				<form id="sj-form" style="flex:1;display:flex;">
 					<input id="sj-search-engine" value="https://duckduckgo.com/?q=" type="hidden" />
 					<div id="address-bar-wrap">
@@ -473,11 +436,9 @@
 				</button>
 			</div>
 
-			<!-- Main viewport -->
 			<div id="viewport">
 				<div id="load-bar"></div>
 
-				<!-- New tab page -->
 				<div id="new-tab-page">
 					<div class="logo-mark">
 						<h1>Desri<span>tory</span></h1>
@@ -517,296 +478,294 @@
 					</div>
 				</div>
 
-				<!-- Proxy iframe container — Scramjet will inject here -->
 				<div id="frame-host" style="position:absolute;inset:0;display:none;"></div>
 			</div>
 
-			<!-- Status bar -->
 			<div id="status-bar">
 				<span id="status-text">Ready</span>
 				<span id="status-secure" style="color:#4ade80;">● Secure</span>
 			</div>
 		</div>
 
-		<!-- Keep required error elements hidden -->
 		<div style="display:none">
 			<p id="sj-error"></p>
 			<pre id="sj-error-code"></pre>
 		</div>
 
 		<script>
+			/* ─── URL Resolver ─── */
+			function resolveUrl(input) {
+				input = (input || '').trim();
+				if (!input) return null;
+				if (input.startsWith('http://') || input.startsWith('https://')) return input;
+				if (input.includes('.') && !input.includes(' ')) return 'https://' + input;
+				return 'https://duckduckgo.com/?q=' + encodeURIComponent(input);
+			}
+
 			/* ─── Tab State ─── */
-let tabs = [];
-let activeTabId = null;
-let tabCounter = 0;
+			let tabs = [];
+			let activeTabId = null;
+			let tabCounter = 0;
 
-function createTab(url = null) {
-    const id = ++tabCounter;
-    const tab = {
-        id,
-        url: url || '',
-        title: 'New Tab',
-        favicon: '',
-        history: [],
-        historyIndex: -1,
-        frameEl: null,
-    };
-    tabs.push(tab);
-    renderTabBar();
-    switchTab(id);
-    if (url) navigateTab(id, url);
-    return id;
-}
+			function createTab(url = null) {
+				const id = ++tabCounter;
+				const tab = {
+					id,
+					url: url || '',
+					title: 'New Tab',
+					favicon: '',
+					history: [],
+					historyIndex: -1,
+					frameEl: null,
+				};
+				tabs.push(tab);
+				renderTabBar();
+				switchTab(id);
+				if (url) navigateTab(id, url);
+				return id;
+			}
 
-function closeTab(id) {
-    if (tabs.length === 1) { showNewTabPage(); return; }
-    const idx = tabs.findIndex(t => t.id === id);
-    tabs = tabs.filter(t => t.id !== id);
-    // remove frame if exists
-    const frame = document.querySelector(`[data-tab-frame="${id}"]`);
-    if (frame) frame.remove();
-    // switch to nearest tab
-    const newIdx = Math.min(idx, tabs.length - 1);
-    renderTabBar();
-    switchTab(tabs[newIdx].id);
-}
+			function closeTab(id) {
+				if (tabs.length === 1) { showNewTabPage(); return; }
+				const idx = tabs.findIndex(t => t.id === id);
+				tabs = tabs.filter(t => t.id !== id);
+				const frame = document.querySelector(`[data-tab-frame="${id}"]`);
+				if (frame) frame.remove();
+				const newIdx = Math.min(idx, tabs.length - 1);
+				renderTabBar();
+				switchTab(tabs[newIdx].id);
+			}
 
-function switchTab(id) {
-    activeTabId = id;
-    // hide all frames
-    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
-    const tab = tabs.find(t => t.id === id);
-    if (!tab) return;
+			function switchTab(id) {
+				activeTabId = id;
+				document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
+				const tab = tabs.find(t => t.id === id);
+				if (!tab) return;
 
-    if (tab.url && tab.frameEl) {
-        newTabPage.style.display = 'none';
-        frameHost.style.display = 'block';
-        tab.frameEl.style.display = 'block';
-        addrInput.value = tab.url;
-    } else {
-        showNewTabPage();
-    }
+				if (tab.url && tab.frameEl) {
+					newTabPage.style.display = 'none';
+					frameHost.style.display = 'block';
+					tab.frameEl.style.display = 'block';
+				} else {
+					showNewTabPage();
+				}
 
-    tabTitle.textContent = tab.title;
-    addrInput.value = tab.url || '';
-    updateNav();
-    renderTabBar();
-}
+				addrInput.value = tab.url || '';
+				updateNav();
+				renderTabBar();
+			}
 
-function renderTabBar() {
-    const bar = document.getElementById('tab-bar');
-    // remove old tabs (keep new-tab-btn)
-    bar.querySelectorAll('.tab').forEach(el => el.remove());
-    const newTabBtn = document.getElementById('new-tab-btn');
+			function renderTabBar() {
+				const bar = document.getElementById('tab-bar');
+				bar.querySelectorAll('.tab').forEach(el => el.remove());
+				const newTabBtn = document.getElementById('new-tab-btn');
 
-    tabs.forEach(tab => {
-        const el = document.createElement('div');
-        el.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
-        el.dataset.tabId = tab.id;
-        el.innerHTML = `
-            <img class="tab-favicon" src="${tab.favicon}" onerror="this.style.display='none'" style="${tab.favicon ? '' : 'display:none'}">
-            <span class="tab-title">${tab.title}</span>
-            <span class="tab-close">✕</span>
-        `;
-        el.addEventListener('click', () => switchTab(tab.id));
-        el.querySelector('.tab-close').addEventListener('click', e => {
-            e.stopPropagation();
-            closeTab(tab.id);
-        });
-        bar.insertBefore(el, newTabBtn);
-    });
-}
+				tabs.forEach(tab => {
+					const el = document.createElement('div');
+					el.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+					el.dataset.tabId = tab.id;
+					el.innerHTML = `
+						<img class="tab-favicon" src="${tab.favicon}" onerror="this.style.display='none'" style="${tab.favicon ? '' : 'display:none'}">
+						<span class="tab-title">${tab.title}</span>
+						<span class="tab-close">✕</span>
+					`;
+					el.addEventListener('click', () => switchTab(tab.id));
+					el.querySelector('.tab-close').addEventListener('click', e => {
+						e.stopPropagation();
+						closeTab(tab.id);
+					});
+					bar.insertBefore(el, newTabBtn);
+				});
+			}
 
-function navigateTab(id, url) {
-    const tab = tabs.find(t => t.id === id);
-    if (!tab) return;
+			function navigateTab(id, rawUrl) {
+				const url = resolveUrl(rawUrl);
+				if (!url) return;
+				const tab = tabs.find(t => t.id === id);
+				if (!tab) return;
 
-    tab.url = url;
-    tab.title = getDomain(url);
-    addrInput.value = url;
+				tab.url = url;
+				tab.title = getDomain(url);
+				addrInput.value = url;
 
-    newTabPage.style.display = 'none';
-    frameHost.style.display = 'block';
+				newTabPage.style.display = 'none';
+				frameHost.style.display = 'block';
 
-    // remove old frame for this tab
-    const old = document.querySelector(`[data-tab-frame="${id}"]`);
-    if (old) old.remove();
+				const old = document.querySelector(`[data-tab-frame="${id}"]`);
+				if (old) old.remove();
 
-    // hide all other frames
-    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
+				document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
 
-    updateSecure(url);
-    startLoadBar();
-    statusText.textContent = 'Loading ' + url;
+				updateSecure(url);
+				startLoadBar();
+				statusText.textContent = 'Loading ' + url;
 
-    // push history
-    if (tab.historyIndex < tab.history.length - 1) tab.history.splice(tab.historyIndex + 1);
-    tab.history.push(url);
-    tab.historyIndex = tab.history.length - 1;
-    updateNav();
-    renderTabBar();
+				if (tab.historyIndex < tab.history.length - 1) tab.history.splice(tab.historyIndex + 1);
+				tab.history.push(url);
+				tab.historyIndex = tab.history.length - 1;
+				updateNav();
+				renderTabBar();
 
-    // set address bar so scramjet picks it up
-    addrInput.value = url;
-    document.getElementById('sj-form').requestSubmit();
+				addrInput.value = url;
+				document.getElementById('sj-form').requestSubmit();
 
-    // watch for the iframe scramjet creates and adopt it
-    const observer = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-            for (const node of m.addedNodes) {
-                if (node.tagName === 'IFRAME') {
-                    node.dataset.tabFrame = id;
-                    tab.frameEl = node;
-                    frameHost.appendChild(node);
-                    Object.assign(node.style, {
-                        position: 'absolute', inset: '0',
-                        width: '100%', height: '100%', border: 'none',
-                    });
-                    stopLoadBar();
-                    statusText.textContent = url;
-                    observer.disconnect();
-                    node.addEventListener('load', () => {
-                        stopLoadBar();
-                        try {
-                            const title = node.contentDocument?.title;
-                            if (title) { tab.title = title; renderTabBar(); tabTitle.textContent = title; }
-                        } catch(e) {}
-                    });
-                }
-            }
-        }
-    });
-    observer.observe(document.body, { childList: true, subtree: false });
-}
+				const observer = new MutationObserver((mutations) => {
+					for (const m of mutations) {
+						for (const node of m.addedNodes) {
+							if (node.tagName === 'IFRAME') {
+								node.dataset.tabFrame = id;
+								tab.frameEl = node;
+								frameHost.appendChild(node);
+								Object.assign(node.style, {
+									position: 'absolute', inset: '0',
+									width: '100%', height: '100%', border: 'none',
+								});
+								stopLoadBar();
+								statusText.textContent = url;
+								observer.disconnect();
+								node.addEventListener('load', () => {
+									stopLoadBar();
+									try {
+										const title = node.contentDocument?.title;
+										if (title) { tab.title = title; renderTabBar(); }
+									} catch(e) {}
+								});
+							}
+						}
+					}
+				});
+				observer.observe(document.body, { childList: true, subtree: false });
+			}
 
-/* ─── Navigate (public) ─── */
-function navigate(url) {
-    if (!url) return;
-    addrInput.value = url;
-    navigateTab(activeTabId, url);
-}
+			function navigate(url) {
+				if (!url) return;
+				const resolved = resolveUrl(url);
+				if (!resolved) return;
+				addrInput.value = resolved;
+				navigateTab(activeTabId, resolved);
+			}
 
-/* ─── DOM refs ─── */
-const newTabPage  = document.getElementById('new-tab-page');
-const frameHost   = document.getElementById('frame-host');
-const loadBar     = document.getElementById('load-bar');
-const addrInput   = document.getElementById('sj-address');
-const homeInput   = document.getElementById('home-input');
-const tabTitle    = document.getElementById('tab-title');
-const tabFavicon  = document.getElementById('tab-favicon');
-const statusText  = document.getElementById('status-text');
-const backBtn     = document.getElementById('back-btn');
-const fwdBtn      = document.getElementById('fwd-btn');
-const lockIcon    = document.getElementById('lock-icon');
-const statusSecure= document.getElementById('status-secure');
+			/* ─── DOM refs ─── */
+			const newTabPage   = document.getElementById('new-tab-page');
+			const frameHost    = document.getElementById('frame-host');
+			const loadBar      = document.getElementById('load-bar');
+			const addrInput    = document.getElementById('sj-address');
+			const homeInput    = document.getElementById('home-input');
+			const statusText   = document.getElementById('status-text');
+			const backBtn      = document.getElementById('back-btn');
+			const fwdBtn       = document.getElementById('fwd-btn');
+			const lockIcon     = document.getElementById('lock-icon');
+			const statusSecure = document.getElementById('status-secure');
 
-function showNewTabPage() {
-    newTabPage.style.display = 'flex';
-    frameHost.style.display = 'none';
-    document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
-    addrInput.value = '';
-    tabTitle.textContent = 'New Tab';
-    statusText.textContent = 'Ready';
-    stopLoadBar();
-}
+			function showNewTabPage() {
+				newTabPage.style.display = 'flex';
+				frameHost.style.display = 'none';
+				document.querySelectorAll('[data-tab-frame]').forEach(f => f.style.display = 'none');
+				addrInput.value = '';
+				statusText.textContent = 'Ready';
+				stopLoadBar();
+			}
 
-/* ─── Event listeners ─── */
-document.getElementById('home-go').addEventListener('click', () => {
-    const v = homeInput.value.trim(); if (v) navigate(v);
-});
-homeInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); navigate(homeInput.value.trim()); }
-});
-document.getElementById('sj-form').addEventListener('submit', e => {
-    const url = addrInput.value.trim(); if (url) navigateTab(activeTabId, url);
-});
-document.getElementById('back-btn').addEventListener('click', () => {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab && tab.historyIndex > 0) { tab.historyIndex--; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
-});
-document.getElementById('fwd-btn').addEventListener('click', () => {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab && tab.historyIndex < tab.history.length - 1) { tab.historyIndex++; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
-});
-document.getElementById('reload-btn').addEventListener('click', () => {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab && tab.url) navigateTab(activeTabId, tab.url);
-});
-document.getElementById('home-btn').addEventListener('click', () => {
-    const tab = tabs.find(t => t.id === activeTabId);
-    if (tab) { tab.url = ''; tab.frameEl = null; }
-    showNewTabPage(); renderTabBar();
-});
-document.getElementById('new-tab-btn').addEventListener('click', () => createTab());
+			/* ─── Event listeners ─── */
+			document.getElementById('home-go').addEventListener('click', () => {
+				const v = resolveUrl(homeInput.value);
+				if (v) navigate(v);
+			});
+			homeInput.addEventListener('keydown', e => {
+				if (e.key === 'Enter') { e.preventDefault(); navigate(resolveUrl(homeInput.value)); }
+			});
+			document.getElementById('sj-form').addEventListener('submit', e => {
+				e.preventDefault();
+				const url = resolveUrl(addrInput.value);
+				if (url) navigateTab(activeTabId, url);
+			});
+			document.getElementById('back-btn').addEventListener('click', () => {
+				const tab = tabs.find(t => t.id === activeTabId);
+				if (tab && tab.historyIndex > 0) { tab.historyIndex--; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
+			});
+			document.getElementById('fwd-btn').addEventListener('click', () => {
+				const tab = tabs.find(t => t.id === activeTabId);
+				if (tab && tab.historyIndex < tab.history.length - 1) { tab.historyIndex++; navigateTab(activeTabId, tab.history[tab.historyIndex]); }
+			});
+			document.getElementById('reload-btn').addEventListener('click', () => {
+				const tab = tabs.find(t => t.id === activeTabId);
+				if (tab && tab.url) navigateTab(activeTabId, tab.url);
+			});
+			document.getElementById('home-btn').addEventListener('click', () => {
+				const tab = tabs.find(t => t.id === activeTabId);
+				if (tab) { tab.url = ''; tab.frameEl = null; }
+				showNewTabPage(); renderTabBar();
+			});
+			document.getElementById('new-tab-btn').addEventListener('click', () => createTab());
 
-function updateNav() {
-    const tab = tabs.find(t => t.id === activeTabId);
-    backBtn.disabled = !tab || tab.historyIndex <= 0;
-    fwdBtn.disabled = !tab || tab.historyIndex >= tab.history.length - 1;
-}
+			function updateNav() {
+				const tab = tabs.find(t => t.id === activeTabId);
+				backBtn.disabled = !tab || tab.historyIndex <= 0;
+				fwdBtn.disabled = !tab || tab.historyIndex >= tab.history.length - 1;
+			}
 
-/* ─── Load bar ─── */
-let loadTimer;
-function startLoadBar() {
-    loadBar.style.width = '0%'; loadBar.classList.add('loading');
-    let w = 0; clearInterval(loadTimer);
-    loadTimer = setInterval(() => { w += Math.random() * 12; if (w > 88) w = 88; loadBar.style.width = w + '%'; }, 200);
-}
-function stopLoadBar() {
-    clearInterval(loadTimer); loadBar.style.width = '100%';
-    setTimeout(() => { loadBar.classList.remove('loading'); loadBar.style.width = '0%'; }, 400);
-}
+			/* ─── Load bar ─── */
+			let loadTimer;
+			function startLoadBar() {
+				loadBar.style.width = '0%'; loadBar.classList.add('loading');
+				let w = 0; clearInterval(loadTimer);
+				loadTimer = setInterval(() => { w += Math.random() * 12; if (w > 88) w = 88; loadBar.style.width = w + '%'; }, 200);
+			}
+			function stopLoadBar() {
+				clearInterval(loadTimer); loadBar.style.width = '100%';
+				setTimeout(() => { loadBar.classList.remove('loading'); loadBar.style.width = '0%'; }, 400);
+			}
 
-addrInput.addEventListener('focus', () => addrInput.select());
+			addrInput.addEventListener('focus', () => addrInput.select());
 
-function getDomain(url) {
-    try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
-    catch { return url.slice(0, 32); }
-}
-function updateSecure(url) {
-    const isHttps = url.startsWith('https://') || !url.startsWith('http://');
-    lockIcon.textContent = isHttps ? '🔒' : '⚠️';
-    lockIcon.style.color = isHttps ? '' : '#f59e0b';
-    statusSecure.textContent = isHttps ? '● Secure' : '● Not Secure';
-    statusSecure.style.color = isHttps ? '#4ade80' : '#f59e0b';
-}
+			function getDomain(url) {
+				try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname; }
+				catch { return url.slice(0, 32); }
+			}
+			function updateSecure(url) {
+				const isHttps = url.startsWith('https://') || !url.startsWith('http://');
+				lockIcon.textContent = isHttps ? '🔒' : '⚠️';
+				lockIcon.style.color = isHttps ? '' : '#f59e0b';
+				statusSecure.textContent = isHttps ? '● Secure' : '● Not Secure';
+				statusSecure.style.color = isHttps ? '#4ade80' : '#f59e0b';
+			}
 
-/* ─── Particles (unchanged) ─── */
-(function() {
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-    const particles = Array.from({ length: 55 }, () => ({
-        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-        size: Math.random() * 1.2 + 0.3, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-    }));
-    const mouse = { x: null, y: null };
-    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (const p of particles) {
-            p.x += p.vx; p.y += p.vy;
-            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
-            if (mouse.x) {
-                const dx = p.x - mouse.x, dy = p.y - mouse.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < 120) {
-                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
-                    ctx.strokeStyle = `rgba(124,77,255,${0.35*(1-dist/120)})`; ctx.lineWidth = 1; ctx.stroke();
-                }
-            }
-        }
-        requestAnimationFrame(animate);
-    }
-    animate();
-})();
+			/* ─── Particles ─── */
+			(function() {
+				const canvas = document.getElementById('particles');
+				const ctx = canvas.getContext('2d');
+				function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+				resize(); window.addEventListener('resize', resize);
+				const particles = Array.from({ length: 55 }, () => ({
+					x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+					size: Math.random() * 1.2 + 0.3, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+				}));
+				const mouse = { x: null, y: null };
+				window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+				function animate() {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					for (const p of particles) {
+						p.x += p.vx; p.y += p.vy;
+						if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+						if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+						ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+						if (mouse.x) {
+							const dx = p.x - mouse.x, dy = p.y - mouse.y;
+							const dist = Math.sqrt(dx*dx + dy*dy);
+							if (dist < 120) {
+								ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
+								ctx.strokeStyle = `rgba(124,77,255,${0.35*(1-dist/120)})`; ctx.lineWidth = 1; ctx.stroke();
+							}
+						}
+					}
+					requestAnimationFrame(animate);
+				}
+				animate();
+			})();
 
-/* ─── Init ─── */
-createTab();
+			/* ─── Init ─── */
+			createTab();
 		</script>
 	</body>
 </html>
